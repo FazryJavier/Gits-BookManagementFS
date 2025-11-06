@@ -1,0 +1,56 @@
+CASE STUDY
+A publishing company is planning to build a digital platform to manage its catalog of Books, Authors, and Publishers. The platform will serve as the foundation for its future web applications. Your task is to design and implement both the Backend API and the Frontend Web Interface.
+
+
+BUSINESS REQUIREMENT
+The system should be able to manage:
+Book
+Author
+Publisher
+The relationships between entities are as follows:
+One Author can have many Books.
+One Book must have exactly one Publisher.
+The system must be secure and only accessible by authenticated users.
+
+TECHNICAL REQUIREMENT
+Backend
+Framework: Laravel, Express.js, or Go Gin / Echo (choose one).
+Environment Config: Use .env file and environment variables for all configuration (DB, JWT secret, etc).
+Authentication: JWT-based authentication (Login, Register, Logout).
+Authorization: All CRUD endpoints require authentication.
+Database: Must use MySQL or PostgreSQL.
+Seeder & Migration: Include database migrations and seeders for initial demo data (users, books, authors, publishers).
+ORM: Use ORM (Eloquent / Sequelize / Prisma / GORM).
+CRUD Operations: Implement full CRUD for Authors, Books, and Publishers.
+Validation: Implement robust input validation for all endpoints.
+Pagination & Filtering: Implement pagination, filtering, and sorting for list endpoints.
+Documentation: Provide Postman Collection or Swagger API documentation.
+Error Handling: Use consistent JSON response format for success & errors.
+Testing: Unit tests are optional but will be considered a plus.
+Deployment (optional): Dockerfile and docker-compose.yml for local setup.
+Frontend
+Framework: Next.js or Nuxt.js (choose one).
+Environment Config: Use environment variables for backend API base URL.
+Authentication: Implement login/logout flow using backend API (JWT handling).
+CRUD Interface: UI for managing Authors, Books, and Publishers (List, Create, Update, Delete).
+Validation: Validate input fields before sending to backend.
+Filtering & Pagination: Implement filters (e.g., by author/publisher) and pagination in the list views.
+API Integration: Use Axios or Fetch API to connect with backend endpoints.
+State Management: Use Redux / Context API (Next.js) or Pinia / Vuex (Nuxt.js).
+UI/UX Library: Use a lightweight component library (TailwindCSS / Bootstrap / Vuetify).
+Error Handling: Show error messages or validation feedback on the UI.
+Testing: Unit tests are optional but will be considered a plus.
+Deployment (optional): Host on Vercel, Netlify, or serve locally.
+
+DELIVERABLES
+Backend
+Source code with clear structure and README.
+.env.example file with API base URL and configuration variables.
+Instructions to run locally (setup, migrate, seed, start server).
+Seeder and migration scripts.
+Postman collection or Swagger documentation.
+Frontend
+Source code with clear structure and README.
+.env.example file with API base URL.
+Instructions to run locally.
+(Optional): Demo URL or short video walkthrough showing main features.
