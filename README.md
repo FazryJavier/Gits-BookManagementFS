@@ -25,7 +25,7 @@ Open book-management-backend
 
 ### 3. Setup Frontend
 Open book-management-frontend
-- VITE_API_BASE_URL=http://127.0.0.1:8000/api
+- VITE_API_BASE_URL=
 - npm install
 - npm run dev
 
