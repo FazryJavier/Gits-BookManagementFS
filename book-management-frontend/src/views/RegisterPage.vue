@@ -1,32 +1,17 @@
 <template>
-  <div class="max-w-md mx-auto mt-10 p-6 border rounded shadow">
-    <h1 class="text-2xl font-bold mb-6">Register</h1>
-
-    <form @submit.prevent="submitForm" class="space-y-4">
-      <div>
-        <input v-model="form.name" type="text" placeholder="Name" class="input" required />
-      </div>
-      <div>
-        <input v-model="form.username" type="text" placeholder="Username" class="input" required />
-      </div>
-      <div>
-        <input v-model="form.email" type="email" placeholder="Email" class="input" required />
-      </div>
-      <div>
-        <input
-          v-model="form.password"
-          type="password"
-          placeholder="Password"
-          class="input"
-          required
-        />
-      </div>
-
-      <button type="submit" class="btn w-full">Register</button>
-    </form>
-
-    <p v-if="error" class="mt-4 text-red-500 font-medium">{{ error }}</p>
-    <p v-if="success" class="mt-4 text-green-500 font-medium">{{ success }}</p>
+  <div class="container">
+    <div class="card">
+      <h1 class="text-2xl mb-4">Register</h1>
+      <form @submit.prevent="submitForm">
+        <input v-model="form.name" placeholder="Name" class="input" />
+        <input v-model="form.username" placeholder="Username" class="input" />
+        <input v-model="form.email" placeholder="Email" type="email" class="input" />
+        <input v-model="form.password" placeholder="Password" type="password" class="input" />
+        <button type="submit" class="btn">Register</button>
+      </form>
+      <p v-if="error" class="message text-red-500">{{ error }}</p>
+      <p v-if="success" class="message text-green-500">{{ success }}</p>
+    </div>
   </div>
 </template>
 
@@ -52,7 +37,6 @@ export default {
         const res = await api.post('/register', form.value)
         success.value = 'Registration successful!'
         console.log(res.data)
-        // Reset form after success
         form.value = { name: '', username: '', email: '', password: '' }
       } catch (e: any) {
         error.value = e.response?.data?.message || e.response?.data?.error || 'Something went wrong'
@@ -66,7 +50,7 @@ export default {
 
 <style scoped>
 .input {
-  width: 100%;
+  width: 80%;
   padding: 8px 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -75,6 +59,11 @@ export default {
 }
 .input:focus {
   border-color: #3b82f6;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .btn {
   background-color: #3b82f6;
