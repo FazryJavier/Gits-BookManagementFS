@@ -3,7 +3,7 @@
 
 ## Tech Stack
 - **Backend:** Laravel PHP, MySQL, JWT Authentication  
-- **Frontend:** Vue 3, Vite, Tailwind CSS  
+- **Frontend:** Vue 3, Vite
 - **API Testing:** Postman collection included  
 - **Other:** Seeder & Migration scripts for quick setup  
 
