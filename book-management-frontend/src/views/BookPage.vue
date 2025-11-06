@@ -5,7 +5,7 @@
       <div class="space-x-2">
         <button @click="goToAuthors" class="btn">Authors</button>
         <button @click="goToPublishers" class="btn">Publishers</button>
-        <button @click="goToBooks" class="btn">Books</button>
+        <button @click="goToCreate" class="btn bg-green-500 hover:bg-green-600">Create Book</button>
         <button @click="logout" class="btn bg-red-500 hover:bg-red-600">Logout</button>
       </div>
     </div>
@@ -19,6 +19,7 @@
           <th class="border px-4 py-2">Pages</th>
           <th class="border px-4 py-2">Author</th>
           <th class="border px-4 py-2">Publisher</th>
+          <th class="border px-4 py-2">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -27,8 +28,16 @@
           <td class="border px-4 py-2">{{ book.title }}</td>
           <td class="border px-4 py-2">{{ book.isbn }}</td>
           <td class="border px-4 py-2">{{ book.pages }}</td>
-          <td class="border px-4 py-2">{{ book.author.name }}</td>
-          <td class="border px-4 py-2">{{ book.publisher.name }}</td>
+          <td class="border px-4 py-2">{{ book.author?.name }}</td>
+          <td class="border px-4 py-2">{{ book.publisher?.name }}</td>
+          <td class="border px-4 py-2 space-x-2">
+            <button @click="editBook(book.id)" class="btn bg-yellow-500 hover:bg-yellow-600">
+              Edit
+            </button>
+            <button @click="deleteBook(book.id)" class="btn bg-red-500 hover:bg-red-600">
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -39,20 +48,19 @@
 
 <script lang="ts">
 import { ref, onMounted } from 'vue'
-import api from '../api/axios'
-import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import api from '../api/axios'
 
 export default {
   setup() {
-    const books = ref([])
-    const auth = useAuthStore()
+    const books = ref<any[]>([])
     const router = useRouter()
+    const auth = useAuthStore()
 
     const fetchBooks = async () => {
       try {
         const res = await api.get('/books')
-        // Ambil data dari pagination
         books.value = res.data.data.data
       } catch (e) {
         console.error('Error fetching books', e)
@@ -66,11 +74,22 @@ export default {
 
     const goToAuthors = () => router.push('/authors')
     const goToPublishers = () => router.push('/publishers')
-    const goToBooks = () => router.push('/books')
+    const goToCreate = () => router.push('/books/create')
+    const editBook = (id: number) => router.push(`/books/${id}/edit`)
+
+    const deleteBook = async (id: number) => {
+      if (!confirm('Are you sure you want to delete this book?')) return
+      try {
+        await api.delete(`/books/${id}`)
+        books.value = books.value.filter((b) => b.id !== id)
+      } catch (e) {
+        console.error('Failed to delete book', e)
+      }
+    }
 
     onMounted(fetchBooks)
 
-    return { books, logout, goToAuthors, goToPublishers, goToBooks }
+    return { books, logout, goToAuthors, goToPublishers, goToCreate, editBook, deleteBook }
   },
 }
 </script>
@@ -78,10 +97,9 @@ export default {
 <style scoped>
 .container {
   padding: 20px;
-  max-width: 1000px;
+  max-width: 900px;
   margin: auto;
 }
-
 .btn {
   background-color: #3b82f6;
   color: white;
@@ -93,7 +111,6 @@ export default {
 .btn:hover {
   background-color: #2563eb;
 }
-
 table {
   border-collapse: collapse;
   width: 100%;

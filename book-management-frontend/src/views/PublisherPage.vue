@@ -4,8 +4,10 @@
       <h1 class="text-2xl">Publisher List</h1>
       <div class="space-x-2">
         <button @click="goToAuthors" class="btn">Authors</button>
-        <button @click="goToPublishers" class="btn">Publishers</button>
         <button @click="goToBooks" class="btn">Books</button>
+        <button @click="goToCreate" class="btn bg-green-500 hover:bg-green-600">
+          Create Publisher
+        </button>
         <button @click="logout" class="btn bg-red-500 hover:bg-red-600">Logout</button>
       </div>
     </div>
@@ -18,6 +20,7 @@
           <th class="border px-4 py-2">Address</th>
           <th class="border px-4 py-2">Email</th>
           <th class="border px-4 py-2">Phone</th>
+          <th class="border px-4 py-2">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -27,6 +30,17 @@
           <td class="border px-4 py-2">{{ publisher.address }}</td>
           <td class="border px-4 py-2">{{ publisher.email }}</td>
           <td class="border px-4 py-2">{{ publisher.phone }}</td>
+          <td class="border px-4 py-2">
+            <button
+              @click="goToEdit(publisher.id)"
+              class="btn bg-yellow-500 hover:bg-yellow-600 mr-2"
+            >
+              Edit
+            </button>
+            <button @click="deletePublisher(publisher.id)" class="btn bg-red-500 hover:bg-red-600">
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -50,7 +64,6 @@ export default {
     const fetchPublishers = async () => {
       try {
         const res = await api.get('/publishers')
-        // Ambil data dari pagination
         publishers.value = res.data.data.data
       } catch (e) {
         console.error('Error fetching publishers', e)
@@ -65,10 +78,31 @@ export default {
     const goToAuthors = () => router.push('/authors')
     const goToPublishers = () => router.push('/publishers')
     const goToBooks = () => router.push('/books')
+    const goToCreate = () => router.push('/publishers/create')
+    const goToEdit = (id: number) => router.push(`/publishers/edit/${id}`)
+
+    const deletePublisher = async (id: number) => {
+      if (!confirm('Are you sure to delete this publisher?')) return
+      try {
+        await api.delete(`/publishers/${id}`)
+        publishers.value = publishers.value.filter((p) => p.id !== id)
+      } catch (e) {
+        console.error('Failed to delete publisher', e)
+      }
+    }
 
     onMounted(fetchPublishers)
 
-    return { publishers, logout, goToAuthors, goToPublishers, goToBooks }
+    return {
+      publishers,
+      logout,
+      goToAuthors,
+      goToPublishers,
+      goToBooks,
+      goToCreate,
+      goToEdit,
+      deletePublisher,
+    }
   },
 }
 </script>

@@ -1,11 +1,13 @@
 <template>
   <div class="container">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl">Author List</h1>
+      <h1 class="text-2xl">Authors</h1>
       <div class="space-x-2">
-        <button @click="goToAuthors" class="btn">Authors</button>
         <button @click="goToPublishers" class="btn">Publishers</button>
         <button @click="goToBooks" class="btn">Books</button>
+        <button @click="goToCreate" class="btn bg-green-500 hover:bg-green-600">
+          Create Author
+        </button>
         <button @click="logout" class="btn bg-red-500 hover:bg-red-600">Logout</button>
       </div>
     </div>
@@ -17,6 +19,7 @@
           <th class="border px-4 py-2">Name</th>
           <th class="border px-4 py-2">Age</th>
           <th class="border px-4 py-2">Birth Date</th>
+          <th class="border px-4 py-2">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -25,10 +28,17 @@
           <td class="border px-4 py-2">{{ author.name }}</td>
           <td class="border px-4 py-2">{{ author.age }}</td>
           <td class="border px-4 py-2">{{ author.birth_date }}</td>
+          <td class="border px-4 py-2">
+            <button @click="goToEdit(author.id)" class="btn bg-yellow-500 hover:bg-yellow-600 mr-2">
+              Edit
+            </button>
+            <button @click="deleteAuthor(author.id)" class="btn bg-red-500 hover:bg-red-600">
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
-
     <p v-if="authors.length === 0" class="mt-4 text-gray-500">No authors found.</p>
   </div>
 </template>
@@ -62,10 +72,31 @@ export default {
     const goToAuthors = () => router.push('/authors')
     const goToPublishers = () => router.push('/publishers')
     const goToBooks = () => router.push('/books')
+    const goToCreate = () => router.push('/authors/create')
+    const goToEdit = (id: number) => router.push(`/authors/edit/${id}`)
+
+    const deleteAuthor = async (id: number) => {
+      if (!confirm('Are you sure to delete this author?')) return
+      try {
+        await api.delete(`/authors/${id}`)
+        authors.value = authors.value.filter((a) => a.id !== id)
+      } catch (e) {
+        console.error('Failed to delete author', e)
+      }
+    }
 
     onMounted(fetchAuthors)
 
-    return { authors, logout, goToAuthors, goToPublishers, goToBooks }
+    return {
+      authors,
+      logout,
+      goToAuthors,
+      goToPublishers,
+      goToBooks,
+      goToCreate,
+      goToEdit,
+      deleteAuthor,
+    }
   },
 }
 </script>
@@ -76,7 +107,6 @@ export default {
   max-width: 900px;
   margin: auto;
 }
-
 .btn {
   background-color: #3b82f6;
   color: white;
@@ -88,7 +118,6 @@ export default {
 .btn:hover {
   background-color: #2563eb;
 }
-
 table {
   border-collapse: collapse;
   width: 100%;
