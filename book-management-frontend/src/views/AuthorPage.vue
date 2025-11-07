@@ -12,6 +12,18 @@
       </div>
     </div>
 
+    <!-- Search -->
+    <div class="mb-3">
+      <input
+        v-model="search"
+        @input="handleSearch"
+        type="text"
+        placeholder="Search author..."
+        class="border rounded px-3 py-2 w-64"
+      />
+    </div>
+
+    <!-- Table -->
     <table class="table-auto w-full border-collapse border border-gray-300">
       <thead>
         <tr class="bg-gray-100">
@@ -39,29 +51,74 @@
         </tr>
       </tbody>
     </table>
+
     <p v-if="authors.length === 0" class="mt-4 text-gray-500">No authors found.</p>
+
+    <!-- Pagination -->
+    <div class="flex justify-center items-center mt-4 space-x-2">
+      <button
+        :disabled="!pagination.prev_page_url"
+        @click="changePage(pagination.current_page - 1)"
+        class="btn"
+      >
+        Prev
+      </button>
+
+      <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+
+      <button
+        :disabled="!pagination.next_page_url"
+        @click="changePage(pagination.current_page + 1)"
+        class="btn"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import api from '../api/axios'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 
 export default {
   setup() {
-    const authors = ref([])
+    const authors = ref<any[]>([])
+    const pagination = ref({
+      current_page: 1,
+      last_page: 1,
+      next_page_url: null,
+      prev_page_url: null,
+    })
+    const search = ref('')
     const auth = useAuthStore()
     const router = useRouter()
 
-    const fetchAuthors = async () => {
+    const fetchAuthors = async (page = 1, searchQuery = '') => {
       try {
-        const res = await api.get('/authors')
+        const res = await api.get('/authors', {
+          params: { page, search: searchQuery },
+        })
         authors.value = res.data.data.data
+        pagination.value = {
+          current_page: res.data.data.current_page,
+          last_page: res.data.data.last_page,
+          next_page_url: res.data.data.next_page_url,
+          prev_page_url: res.data.data.prev_page_url,
+        }
       } catch (e) {
         console.error('Error fetching authors', e)
       }
+    }
+
+    const handleSearch = () => {
+      fetchAuthors(1, search.value)
+    }
+
+    const changePage = (page: number) => {
+      fetchAuthors(page, search.value)
     }
 
     const logout = () => {
@@ -69,7 +126,6 @@ export default {
       router.push('/login')
     }
 
-    const goToAuthors = () => router.push('/authors')
     const goToPublishers = () => router.push('/publishers')
     const goToBooks = () => router.push('/books')
     const goToCreate = () => router.push('/authors/create')
@@ -79,18 +135,21 @@ export default {
       if (!confirm('Are you sure to delete this author?')) return
       try {
         await api.delete(`/authors/${id}`)
-        authors.value = authors.value.filter((a) => a.id !== id)
+        fetchAuthors(pagination.value.current_page, search.value)
       } catch (e) {
         console.error('Failed to delete author', e)
       }
     }
 
-    onMounted(fetchAuthors)
+    onMounted(() => fetchAuthors())
 
     return {
       authors,
+      search,
+      pagination,
+      handleSearch,
+      changePage,
       logout,
-      goToAuthors,
       goToPublishers,
       goToBooks,
       goToCreate,
@@ -118,18 +177,8 @@ export default {
 .btn:hover {
   background-color: #2563eb;
 }
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 10px;
-}
-th,
-td {
-  border: 1px solid #d1d5db;
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background-color: #f3f4f6;
+.btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 </style>
