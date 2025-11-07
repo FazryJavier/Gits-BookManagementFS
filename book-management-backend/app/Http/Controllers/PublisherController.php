@@ -18,7 +18,7 @@ class PublisherController extends Controller
         $search = $request->query('search');
         $sortBy = $request->query('sortBy', 'id');
         $sortDir = $request->query('sortDir', 'asc');
-        $perPage = $request->query('perPage', 10);
+        $perPage = $request->query('perPage', 2);
 
         $query = Publisher::query();
 
