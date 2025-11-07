@@ -12,6 +12,19 @@
       </div>
     </div>
 
+    <div class="mb-4 flex justify-between items-center">
+      <input
+        v-model="search"
+        @keyup.enter="fetchAuthors"
+        type="text"
+        placeholder="Search..."
+        class="border border-gray-300 rounded px-3 py-2 w-1/3"
+      />
+      <button @click="fetchAuthors" class="btn bg-blue-500 hover:bg-blue-600">
+        Search
+      </button>
+    </div>
+
     <table class="table-auto w-full border-collapse border border-gray-300">
       <thead>
         <tr class="bg-gray-100">
@@ -96,6 +109,7 @@ export default {
     })
     const page = ref(1)
     const perPage = ref(2)
+    const search = ref('')
     const auth = useAuthStore()
     const router = useRouter()
 
@@ -105,6 +119,7 @@ export default {
           params: {
             page: page.value,
             perPage: perPage.value,
+            search: search.value,
           },
         })
         authors.value = res.data.data.data
@@ -153,6 +168,7 @@ export default {
       meta,
       page,
       perPage,
+      search,
       logout,
       goToPublishers,
       goToBooks,
@@ -161,6 +177,7 @@ export default {
       deleteAuthor,
       changePage,
       handlePerPageChange,
+      fetchAuthors,
     }
   },
 }
