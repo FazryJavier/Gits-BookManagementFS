@@ -10,6 +10,19 @@
       </div>
     </div>
 
+    <div class="mb-4 flex justify-between items-center">
+      <input
+        v-model="search"
+        @keyup.enter="fetchBooks"
+        type="text"
+        placeholder="Search book title..."
+        class="border border-gray-300 rounded px-3 py-2 w-1/3"
+      />
+      <button @click="fetchBooks" class="btn bg-blue-500 hover:bg-blue-600">
+        Search
+      </button>
+    </div>
+
     <table class="table-auto w-full border-collapse border border-gray-300">
       <thead>
         <tr class="bg-gray-100">
@@ -43,6 +56,37 @@
     </table>
 
     <p v-if="books.length === 0" class="mt-4 text-gray-500">No books found.</p>
+
+    <div class="flex justify-center items-center mt-6 space-x-4">
+      <button
+        @click="changePage(meta.current_page - 1)"
+        :disabled="meta.current_page === 1"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
+      >
+        Prev
+      </button>
+
+      <div class="flex items-center space-x-2">
+        <label class="text-sm">Per Page:</label>
+        <select
+          v-model="perPage"
+          @change="handlePerPageChange"
+          class="border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          <option v-for="n in [2, 5, 10]" :key="n" :value="n">{{ n }}</option>
+        </select>
+      </div>
+
+      <span class="text-sm">Page {{ meta.current_page }} of {{ meta.last_page }}</span>
+
+      <button
+        @click="changePage(meta.current_page + 1)"
+        :disabled="meta.current_page === meta.last_page"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
@@ -55,16 +99,44 @@ import api from '../api/axios'
 export default {
   setup() {
     const books = ref<any[]>([])
+    const meta = ref({
+      current_page: 1,
+      last_page: 1,
+      total: 0,
+      per_page: 2,
+    })
+    const page = ref(1)
+    const perPage = ref(2)
+    const search = ref('')
     const router = useRouter()
     const auth = useAuthStore()
 
     const fetchBooks = async () => {
       try {
-        const res = await api.get('/books')
+        const res = await api.get('/books', {
+          params: {
+            page: page.value,
+            perPage: perPage.value,
+            search: search.value,
+          },
+        })
         books.value = res.data.data.data
+        meta.value = res.data.data.meta
       } catch (e) {
         console.error('Error fetching books', e)
       }
+    }
+
+    const changePage = (newPage: number) => {
+      if (newPage >= 1 && newPage <= meta.value.last_page) {
+        page.value = newPage
+        fetchBooks()
+      }
+    }
+
+    const handlePerPageChange = () => {
+      page.value = 1
+      fetchBooks()
     }
 
     const logout = () => {
@@ -89,7 +161,22 @@ export default {
 
     onMounted(fetchBooks)
 
-    return { books, logout, goToAuthors, goToPublishers, goToCreate, editBook, deleteBook }
+    return {
+      books,
+      meta,
+      page,
+      perPage,
+      search,
+      logout,
+      goToAuthors,
+      goToPublishers,
+      goToCreate,
+      editBook,
+      deleteBook,
+      changePage,
+      handlePerPageChange,
+      fetchBooks,
+    }
   },
 }
 </script>
