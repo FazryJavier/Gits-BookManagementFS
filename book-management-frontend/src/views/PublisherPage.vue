@@ -12,6 +12,19 @@
       </div>
     </div>
 
+    <div class="mb-4 flex justify-between items-center">
+      <input
+        v-model="search"
+        @keyup.enter="fetchPublishers"
+        type="text"
+        placeholder="Search publisher name..."
+        class="border border-gray-300 rounded px-3 py-2 w-1/3"
+      />
+      <button @click="fetchPublishers" class="btn bg-blue-500 hover:bg-blue-600">
+        Search
+      </button>
+    </div>
+
     <table class="table-auto w-full border-collapse border border-gray-300">
       <thead>
         <tr class="bg-gray-100">
@@ -46,6 +59,41 @@
     </table>
 
     <p v-if="publishers.length === 0" class="mt-4 text-gray-500">No publishers found.</p>
+
+    <div class="flex justify-center items-center mt-6 space-x-4">
+      <button
+        @click="changePage(meta.current_page - 1)"
+        :disabled="meta.current_page === 1"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
+      >
+        Prev
+      </button>
+
+      <div class="flex items-center space-x-2">
+        <label class="text-sm">Per Page:</label>
+        <select
+          v-model="perPage"
+          @change="handlePerPageChange"
+          class="border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          <option v-for="n in [2, 5, 10]" :key="n" :value="n">
+            {{ n }}
+          </option>
+        </select>
+      </div>
+
+      <span class="text-sm">
+        Page {{ meta.current_page }} of {{ meta.last_page }}
+      </span>
+
+      <button
+        @click="changePage(meta.current_page + 1)"
+        :disabled="meta.current_page === meta.last_page"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
@@ -57,17 +105,45 @@ import { useRouter } from 'vue-router'
 
 export default {
   setup() {
-    const publishers = ref([])
+    const publishers = ref<any[]>([])
+    const meta = ref({
+      current_page: 1,
+      last_page: 1,
+      total: 0,
+      per_page: 2,
+    })
+    const page = ref(1)
+    const perPage = ref(2)
+    const search = ref('')
     const auth = useAuthStore()
     const router = useRouter()
 
     const fetchPublishers = async () => {
       try {
-        const res = await api.get('/publishers')
+        const res = await api.get('/publishers', {
+          params: {
+            page: page.value,
+            perPage: perPage.value,
+            search: search.value,
+          },
+        })
         publishers.value = res.data.data.data
+        meta.value = res.data.data.meta
       } catch (e) {
         console.error('Error fetching publishers', e)
       }
+    }
+
+    const changePage = (newPage: number) => {
+      if (newPage >= 1 && newPage <= meta.value.last_page) {
+        page.value = newPage
+        fetchPublishers()
+      }
+    }
+
+    const handlePerPageChange = () => {
+      page.value = 1
+      fetchPublishers()
     }
 
     const logout = () => {
@@ -76,7 +152,6 @@ export default {
     }
 
     const goToAuthors = () => router.push('/authors')
-    const goToPublishers = () => router.push('/publishers')
     const goToBooks = () => router.push('/books')
     const goToCreate = () => router.push('/publishers/create')
     const goToEdit = (id: number) => router.push(`/publishers/edit/${id}`)
@@ -95,13 +170,19 @@ export default {
 
     return {
       publishers,
+      meta,
+      page,
+      perPage,
+      search,
       logout,
       goToAuthors,
-      goToPublishers,
       goToBooks,
       goToCreate,
       goToEdit,
       deletePublisher,
+      changePage,
+      handlePerPageChange,
+      fetchPublishers,
     }
   },
 }
