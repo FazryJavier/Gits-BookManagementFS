@@ -4,8 +4,7 @@
 ## Tech Stack
 - **Backend:** Laravel PHP, MySQL, JWT Authentication  
 - **Frontend:** Vue 3, Vite
-- **API Testing:** Postman collection included  
-- **Other:** Seeder & Migration scripts for quick setup  
+- **API Testing:** Postman collection
 
 ---
 
@@ -20,12 +19,18 @@ Open book-management-backend
 - cp .env.example .env
 - composer install
 - php artisan key:generate
+
+JWT Setup:
+- After installing dependencies, generate your JWT secret key: **php artisan jwt:secret**
+- This will add a line like below to your .env file: **JWT_SECRET=your_generated_secret_key_here**
+
+Database Migrate and Seeder:
 - php artisan migrate --seed
 - php artisan serve
 
 ### 3. Setup Frontend
 Open book-management-frontend
-- VITE_API_BASE_URL=
+- Add API Base URL: **VITE_API_BASE_URL=**
 - npm install
 - npm run dev
 
