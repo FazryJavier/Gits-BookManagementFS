@@ -12,18 +12,6 @@
       </div>
     </div>
 
-    <!-- Search -->
-    <div class="mb-3">
-      <input
-        v-model="search"
-        @input="handleSearch"
-        type="text"
-        placeholder="Search author..."
-        class="border rounded px-3 py-2 w-64"
-      />
-    </div>
-
-    <!-- Table -->
     <table class="table-auto w-full border-collapse border border-gray-300">
       <thead>
         <tr class="bg-gray-100">
@@ -51,25 +39,39 @@
         </tr>
       </tbody>
     </table>
-
     <p v-if="authors.length === 0" class="mt-4 text-gray-500">No authors found.</p>
+  </div>
 
-    <!-- Pagination -->
-    <div class="flex justify-center items-center mt-4 space-x-2">
+  <div class="flex justify-center items-center mt-6 space-x-4">
       <button
-        :disabled="!pagination.prev_page_url"
-        @click="changePage(pagination.current_page - 1)"
-        class="btn"
+        @click="changePage(meta.current_page - 1)"
+        :disabled="meta.current_page === 1"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
       >
         Prev
       </button>
 
-      <span>Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+      <div class="flex items-center space-x-2">
+        <label class="text-sm">Per Page:</label>
+        <select
+          v-model="perPage"
+          @change="handlePerPageChange"
+          class="border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          <option v-for="n in [2, 5, 10]" :key="n" :value="n">
+            {{ n }}
+          </option>
+        </select>
+      </div>
+
+      <span class="text-sm">
+        Page {{ meta.current_page }} of {{ meta.last_page }}
+      </span>
 
       <button
-        :disabled="!pagination.next_page_url"
-        @click="changePage(pagination.current_page + 1)"
-        class="btn"
+        @click="changePage(meta.current_page + 1)"
+        :disabled="meta.current_page === meta.last_page"
+        class="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
       >
         Next
       </button>
@@ -78,7 +80,7 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '../api/axios'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
@@ -86,39 +88,42 @@ import { useRouter } from 'vue-router'
 export default {
   setup() {
     const authors = ref<any[]>([])
-    const pagination = ref({
+    const meta = ref({
       current_page: 1,
       last_page: 1,
-      next_page_url: null,
-      prev_page_url: null,
+      total: 0,
+      per_page: 2,
     })
-    const search = ref('')
+    const page = ref(1)
+    const perPage = ref(2)
     const auth = useAuthStore()
     const router = useRouter()
 
-    const fetchAuthors = async (page = 1, searchQuery = '') => {
+    const fetchAuthors = async () => {
       try {
         const res = await api.get('/authors', {
-          params: { page, search: searchQuery },
+          params: {
+            page: page.value,
+            perPage: perPage.value,
+          },
         })
         authors.value = res.data.data.data
-        pagination.value = {
-          current_page: res.data.data.current_page,
-          last_page: res.data.data.last_page,
-          next_page_url: res.data.data.next_page_url,
-          prev_page_url: res.data.data.prev_page_url,
-        }
+        meta.value = res.data.data.meta
       } catch (e) {
         console.error('Error fetching authors', e)
       }
     }
 
-    const handleSearch = () => {
-      fetchAuthors(1, search.value)
+    const changePage = (newPage: number) => {
+      if (newPage >= 1 && newPage <= meta.value.last_page) {
+        page.value = newPage
+        fetchAuthors()
+      }
     }
 
-    const changePage = (page: number) => {
-      fetchAuthors(page, search.value)
+    const handlePerPageChange = () => {
+      page.value = 1
+      fetchAuthors()
     }
 
     const logout = () => {
@@ -135,26 +140,27 @@ export default {
       if (!confirm('Are you sure to delete this author?')) return
       try {
         await api.delete(`/authors/${id}`)
-        fetchAuthors(pagination.value.current_page, search.value)
+        authors.value = authors.value.filter((a) => a.id !== id)
       } catch (e) {
         console.error('Failed to delete author', e)
       }
     }
 
-    onMounted(() => fetchAuthors())
+    onMounted(fetchAuthors)
 
     return {
       authors,
-      search,
-      pagination,
-      handleSearch,
-      changePage,
+      meta,
+      page,
+      perPage,
       logout,
       goToPublishers,
       goToBooks,
       goToCreate,
       goToEdit,
       deleteAuthor,
+      changePage,
+      handlePerPageChange,
     }
   },
 }
@@ -177,8 +183,18 @@ export default {
 .btn:hover {
   background-color: #2563eb;
 }
-.btn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+}
+th,
+td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background-color: #f3f4f6;
 }
 </style>
