@@ -10,6 +10,7 @@ import Books from '../views/BookPage.vue'
 import BookFormPage from '../views/BookFormPage.vue'
 
 const routes = [
+  { path: '/', redirect: '/login' },
   { path: '/register', component: Register },
   { path: '/login', component: Login },
   { path: '/authors', component: Authors },
