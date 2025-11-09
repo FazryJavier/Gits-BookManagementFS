@@ -30,7 +30,7 @@ const router = createRouter({
 
 // Global guard
 router.beforeEach((to, from, next) => {
-  const auth = useAuthStore() // ini aman karena dijalankan saat router navigasi
+  const auth = useAuthStore()
   const publicPages = ['/login', '/register']
 
   if (!publicPages.includes(to.path) && !auth.token) {
