@@ -69,7 +69,7 @@ onMounted(fetchBooks)
         @click="goToCreate"
         class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
       >
-        + Create Books
+        + Create Book
       </button>
     </div>
 
