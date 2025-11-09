@@ -1,96 +1,138 @@
-<template>
-  <div class="container max-w-md mx-auto mt-10 p-6 border rounded shadow">
-    <h1 class="text-2xl mb-4">{{ isEdit ? 'Edit Publisher' : 'Create Publisher' }}</h1>
-
-    <form @submit.prevent="submitForm">
-      <input v-model="form.name" placeholder="Publisher Name" class="input" required />
-      <input v-model="form.address" placeholder="Address" class="input" required />
-      <input v-model="form.email" type="email" placeholder="Email" class="input" required />
-      <input v-model="form.phone" placeholder="Phone" class="input" required />
-
-      <div class="flex space-x-2 mt-4">
-        <button type="submit" class="btn bg-green-500 hover:bg-green-600">
-          {{ isEdit ? 'Update' : 'Create' }}
-        </button>
-        <button type="button" class="btn bg-gray-400 hover:bg-gray-500" @click="goBack">
-          Cancel
-        </button>
-      </div>
-    </form>
-
-    <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
-    <p v-if="success" class="text-green-500 mt-2">{{ success }}</p>
-  </div>
-</template>
-
-<script lang="ts">
-import { ref, onMounted } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import api from '../api/axios'
+import api from '@/api/axios'
 
-export default {
-  setup() {
-    const router = useRouter()
-    const route = useRoute()
-    const isEdit = ref(false)
-    const error = ref('')
-    const success = ref('')
-    const form = ref({ name: '', address: '', email: '', phone: '' })
-    const id = route.params.id as string | undefined
+const router = useRouter()
+const route = useRoute()
 
-    const fetchPublisher = async (id: string) => {
-      try {
-        const res = await api.get(`/publishers/${id}`)
-        Object.assign(form.value, res.data.data)
-      } catch (e) {
-        console.error('Failed to fetch publisher', e)
-      }
-    }
+const isEdit = computed(() => !!route.params.id)
+const form = ref({
+  name: '',
+  address: '',
+  email: '',
+  phone: '',
+})
+const loading = ref(false)
+const message = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
-    const submitForm = async () => {
-      error.value = ''
-      success.value = ''
-      try {
-        if (isEdit.value) {
-          await api.put(`/publishers/${id}`, form.value)
-          success.value = 'Publisher updated successfully'
-        } else {
-          await api.post('/publishers', form.value)
-          success.value = 'Publisher created successfully'
-        }
-        router.push('/publishers')
-      } catch (e: any) {
-        error.value = e.response?.data?.message || 'Something went wrong'
-      }
-    }
-
-    const goBack = () => router.push('/publishers')
-
-    onMounted(async () => {
-      if (id) {
-        isEdit.value = true
-        await fetchPublisher(id)
-      }
-    })
-
-    return { form, submitForm, error, success, isEdit, goBack }
-  },
+const fetchPublisher = async (id: string) => {
+  try {
+    const res = await api.get(`/publishers/${id}`)
+    Object.assign(form.value, res.data.data)
+  } catch (err) {
+    console.error('Failed to fetch publisher:', err)
+  }
 }
+
+const submitForm = async () => {
+  message.value = null
+  loading.value = true
+  try {
+    if (isEdit.value) {
+      await api.put(`/publishers/${route.params.id}`, form.value)
+      message.value = { type: 'success', text: 'Publisher updated successfully.' }
+    } else {
+      await api.post('/publishers', form.value)
+      message.value = { type: 'success', text: 'Publisher created successfully.' }
+    }
+
+    setTimeout(() => router.push('/publishers'), 800)
+  } catch (err: any) {
+    message.value = {
+      type: 'error',
+      text: err.response?.data?.message || 'Something went wrong.',
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  if (isEdit.value) await fetchPublisher(route.params.id as string)
+})
 </script>
 
-<style scoped>
-.input {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.btn {
-  background-color: #3b82f6;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  margin-top: 10px;
-}
-</style>
+<template>
+  <div class="container mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-semibold text-gray-800">
+        {{ isEdit ? 'Edit Publisher' : 'Create Publisher' }}
+      </h1>
+
+      <div class="space-x-2">
+        <button
+          @click="router.push('/publishers')"
+          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+        >
+          ← Back
+        </button>
+        <button
+          @click="submitForm"
+          :disabled="loading"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+        >
+          {{ loading ? 'Saving...' : isEdit ? 'Update' : 'Create' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border border-gray-200 p-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="Enter publisher name"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 outline-none"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <input
+            v-model="form.address"
+            type="text"
+            placeholder="Enter publisher address"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 outline-none"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="Enter publisher email"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 outline-none"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <input
+            v-model="form.phone"
+            type="text"
+            placeholder="Enter publisher phone"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500 outline-none"
+            required
+          />
+        </div>
+      </div>
+
+      <p
+        v-if="message"
+        :class="[
+          'mt-6 text-center font-medium',
+          message.type === 'success' ? 'text-green-600' : 'text-red-600',
+        ]"
+      >
+        {{ message.text }}
+      </p>
+    </div>
+  </div>
+</template>
